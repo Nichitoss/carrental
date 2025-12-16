@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель управления - Car Rental</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header>
+    <div class="header-content">
+        <h1>🚗 Car Rental</h1>
+        <nav>
+            <a href="/index.html">Главная</a>
+            <a href="/author.html">Об авторе</a>
+            <span id="userInfo" class="user-info"></span>
+            <button id="logoutBtn" class="btn-logout">Выход</button>
+        </nav>
+    </div>
+</header>
+<main class="dashboard-main">
+    <div class="dashboard-container">
+        <!-- Каталог автомобилей -->
+        <section class="card-section">
+            <div class="section-header">
+                <h2>📋 Каталог автомобилей</h2>
+                <div class="header-actions">
+                    <span id="vehiclesCount" class="badge">0</span>
+                    <button id="addVehicleBtn" class="btn-primary hidden" onclick="showVehicleModal()">+ Добавить</button>
+                </div>
+            </div>
+            <div class="filters" id="vehicleFilters">
+                <input type="text" id="vehicleSearch" placeholder="Поиск по марке, модели..." oninput="filterVehicles()">
+                <select id="vehicleStatusFilter" onchange="filterVehicles()">
+                    <option value="">Все статусы</option>
+                    <option value="AVAILABLE">Доступен</option>
+                    <option value="RENTED">Арендован</option>
+                    <option value="MAINTENANCE">Обслуживание</option>
+                </select>
+                <select id="vehicleSort" onchange="filterVehicles()">
+                    <option value="">Сортировка</option>
+                    <option value="price">По цене</option>
+                    <option value="year">По году</option>
+                </select>
+            </div>
+            <div class="table-wrapper">
+                <table id="vehicles" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Марка</th>
+                            <th>Модель</th>
+                            <th>Год</th>
+                            <th>Цена/день</th>
+                            <th>Статус</th>
+                            <th id="vehiclesActionsHeader" class="hidden">Действия</th>
+                            <th id="vehiclesRentHeader" class="hidden">Аренда</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="7" class="empty-state">Загрузка...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Аренды -->
+        <section class="card-section">
+            <div class="section-header">
+                <h2 id="rentalsTitle">📅 Мои аренды</h2>
+                <div class="header-actions">
+                    <span id="rentalsCount" class="badge">0</span>
+                    <button id="addRentalBtn" class="btn-primary hidden" onclick="showRentalModal()">+ Создать аренду</button>
+                </div>
+            </div>
+            <div class="filters hidden" id="rentalFilters">
+                <select id="rentalStatusFilter" onchange="filterRentals()">
+                    <option value="">Все статусы</option>
+                    <option value="ACTIVE">Активна</option>
+                    <option value="COMPLETED">Завершена</option>
+                    <option value="CANCELLED">Отменена</option>
+                </select>
+            </div>
+            <div class="table-wrapper">
+                <table id="rentals" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Автомобиль</th>
+                            <th id="rentalClientHeader" class="hidden">Клиент</th>
+                            <th>Статус</th>
+                            <th>Начало</th>
+                            <th>Окончание</th>
+                            <th>Сумма</th>
+                            <th id="rentalsActionsHeader" class="hidden">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="7" class="empty-state">Загрузка...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Платежи -->
+        <section class="card-section">
+            <div class="section-header">
+                <h2 id="paymentsTitle">💳 Мои платежи</h2>
+                <span id="paymentsCount" class="badge">0</span>
+            </div>
+            <div class="table-wrapper">
+                <table id="payments" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID аренды</th>
+                            <th>Сумма</th>
+                            <th>Метод</th>
+                            <th>Статус</th>
+                            <th>Дата оплаты</th>
+                            <th id="paymentsActionsHeader" class="hidden">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="6" class="empty-state">Загрузка...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Управление пользователями (только для админа) -->
+        <section class="card-section hidden" id="usersSection">
+            <div class="section-header">
+                <h2>👥 Управление пользователями</h2>
+                <button class="btn-primary" onclick="showUserModal()">+ Добавить пользователя</button>
+            </div>
+            <div class="table-wrapper">
+                <table id="users" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Логин</th>
+                            <th>Email</th>
+                            <th>Имя</th>
+                            <th>Роль</th>
+                            <th>Активен</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="6" class="empty-state">Загрузка...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</main>
+
+<!-- Модальные окна -->
+<div id="vehicleModal" class="modal hidden">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('vehicleModal')">&times;</span>
+        <h2 id="vehicleModalTitle">Добавить автомобиль</h2>
+        <form id="vehicleForm" onsubmit="saveVehicle(event)">
+            <input type="hidden" id="vehicleId">
+            <label>Гос. номер <input type="text" id="vehicleLicensePlate" required></label>
+            <label>Марка <input type="text" id="vehicleManufacturer" required></label>
+            <label>Модель <input type="text" id="vehicleModel" required></label>
+            <label>Год <input type="number" id="vehicleYear" min="1900" max="2100" required></label>
+            <label>Цена/день <input type="number" id="vehiclePrice" step="0.01" min="0" required></label>
+            <label>Статус
+                <select id="vehicleStatus" required>
+                    <option value="AVAILABLE">Доступен</option>
+                    <option value="RENTED">Арендован</option>
+                    <option value="MAINTENANCE">Обслуживание</option>
+                </select>
+            </label>
+            <label>Цвет <input type="text" id="vehicleColor"></label>
+            <label>Пробег <input type="number" id="vehicleMileage" step="0.01" min="0"></label>
+            <div class="modal-actions">
+                <button type="submit" class="btn-primary">Сохранить</button>
+                <button type="button" class="btn-secondary" onclick="closeModal('vehicleModal')">Отмена</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="rentalModal" class="modal hidden">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('rentalModal')">&times;</span>
+        <h2>Создать аренду</h2>
+        <form id="rentalForm" onsubmit="saveRental(event)">
+            <input type="hidden" id="rentalVehicleId">
+            <label>Автомобиль
+                <select id="rentalVehicleSelect" required>
+                    <option value="">Выберите автомобиль</option>
+                </select>
+            </label>
+            <label>Дата начала <input type="date" id="rentalStartDate" required></label>
+            <label>Дата окончания <input type="date" id="rentalEndDate" required></label>
+            <div id="rentalPriceInfo" style="padding: 1rem; background: #f0f0f0; border-radius: 8px; margin: 1rem 0;">
+                <strong>Стоимость:</strong> <span id="rentalTotalPrice">-</span>
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn-primary">Создать аренду</button>
+                <button type="button" class="btn-secondary" onclick="closeModal('rentalModal')">Отмена</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    let currentUser = null;
+    let allVehicles = [];
+    let allRentals = [];
+    let allPayments = [];
+    let allUsers = [];
+
+    async function api(path, options = {}) {
+        const res = await fetch(path, {
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            },
+            ...options
+        });
+        if (res.status === 401) {
+            window.location.href = '/login.html';
+            throw new Error('Unauthorized');
+        }
+        if (!res.ok) {
+            const text = await res.text();
+            let errorMsg = text;
+            try {
+                const json = JSON.parse(text);
+                errorMsg = json.message || json.error || text;
+            } catch {}
+            throw new Error(errorMsg);
+        }
+        return res.json();
+    }
+
+    function showToast(message, type = 'error') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast ${type} show`;
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('ru-RU');
+    }
+
+    function formatMoney(amount) {
+        if (!amount) return '-';
+        return new Intl.NumberFormat('ru-RU', {
+            style: 'currency',
+            currency: 'RUB'
+        }).format(amount);
+    }
+
+    function getStatusBadge(status) {
+        const badges = {
+            'AVAILABLE': '<span class="badge badge-success">Доступен</span>',
+            'RENTED': '<span class="badge badge-warning">Арендован</span>',
+            'MAINTENANCE': '<span class="badge badge-danger">Обслуживание</span>',
+            'ACTIVE': '<span class="badge badge-info">Активна</span>',
+            'COMPLETED': '<span class="badge badge-success">Завершена</span>',
+            'CANCELLED': '<span class="badge badge-danger">Отменена</span>',
+            'PAID': '<span class="badge badge-success">Оплачен</span>',
+            'PENDING': '<span class="badge badge-warning">Ожидает</span>',
+            'FAILED': '<span class="badge badge-danger">Ошибка</span>'
+        };
+        return badges[status] || `<span class="badge">${status}</span>`;
+    }
+
+    function isAdmin() {
+        return currentUser && currentUser.role === 'ADMIN';
+    }
+
+    function isManager() {
+        return currentUser && (currentUser.role === 'MANAGER' || currentUser.role === 'ADMIN');
+    }
+
+    function isClient() {
+        return currentUser && currentUser.role === 'CLIENT';
+    }
+
+    function showAdminFeatures() {
+        if (isAdmin()) {
+            document.getElementById('addVehicleBtn').classList.remove('hidden');
+            document.getElementById('vehiclesActionsHeader').classList.remove('hidden');
+            document.getElementById('usersSection').classList.remove('hidden');
+            document.getElementById('rentalsTitle').textContent = '📅 Все аренды';
+            document.getElementById('paymentsTitle').textContent = '💳 Все платежи';
+            document.getElementById('rentalFilters').classList.remove('hidden');
+            document.getElementById('addRentalBtn').classList.remove('hidden');
+            document.getElementById('rentalsActionsHeader').classList.remove('hidden');
+            document.getElementById('rentalClientHeader').classList.remove('hidden');
+            document.getElementById('paymentsActionsHeader').classList.remove('hidden');
+        } else if (isManager()) {
+            document.getElementById('rentalsTitle').textContent = '📅 Все аренды';
+            document.getElementById('paymentsTitle').textContent = '💳 Все платежи';
+            document.getElementById('rentalFilters').classList.remove('hidden');
+            document.getElementById('addRentalBtn').classList.remove('hidden');
+            document.getElementById('rentalsActionsHeader').classList.remove('hidden');
+            document.getElementById('rentalClientHeader').classList.remove('hidden');
+        } else if (isClient()) {
+            // Для клиентов показываем кнопку создания аренды
+            document.getElementById('addRentalBtn').classList.remove('hidden');
+            document.getElementById('vehiclesRentHeader').classList.remove('hidden');
+        }
+    }
+
+    function filterVehicles() {
+        const search = document.getElementById('vehicleSearch').value.toLowerCase();
+        const status = document.getElementById('vehicleStatusFilter').value;
+        const sort = document.getElementById('vehicleSort').value;
+        
+        let filtered = [...allVehicles];
+        
+        if (search) {
+            filtered = filtered.filter(v => 
+                v.manufacturer.toLowerCase().includes(search) ||
+                v.model.toLowerCase().includes(search) ||
+                v.licensePlate.toLowerCase().includes(search)
+            );
+        }
+        
+        if (status) {
+            filtered = filtered.filter(v => v.status === status);
+        }
+        
+        if (sort === 'price') {
+            filtered.sort((a, b) => a.dailyPrice - b.dailyPrice);
+        } else if (sort === 'year') {
+            filtered.sort((a, b) => b.year - a.year);
+        }
+        
+        renderVehicles(filtered);
+    }
+
+    function filterRentals() {
+        const status = document.getElementById('rentalStatusFilter').value;
+        let filtered = [...allRentals];
+        
+        if (status) {
+            filtered = filtered.filter(r => r.status === status);
+        }
+        
+        renderRentals(filtered);
+    }
+
+    function renderVehicles(vehicles) {
+        const tbody = document.querySelector('#vehicles tbody');
+        const countEl = document.getElementById('vehiclesCount');
+        
+        if (countEl) countEl.textContent = vehicles.length;
+
+        if (vehicles.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Нет данных</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = vehicles.map(v => {
+            const actions = isAdmin() ? `
+                <td>
+                    <button class="btn-small" onclick="editVehicle(${v.id})">✏️</button>
+                    <button class="btn-small btn-danger" onclick="deleteVehicle(${v.id})">🗑️</button>
+                </td>
+            ` : '<td></td>';
+            
+            const rentBtn = isClient() && v.status === 'AVAILABLE' ? `
+                <td>
+                    <button class="btn-small" onclick="rentVehicle(${v.id})">🚗 Арендовать</button>
+                </td>
+            ` : '<td></td>';
+            
+            return `
+                <tr>
+                    <td>${v.manufacturer || '-'}</td>
+                    <td>${v.model || '-'}</td>
+                    <td>${v.year || '-'}</td>
+                    <td>${formatMoney(v.dailyPrice)}</td>
+                    <td>${getStatusBadge(v.status)}</td>
+                    ${actions}
+                    ${rentBtn}
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderRentals(rentals) {
+        const tbody = document.querySelector('#rentals tbody');
+        const countEl = document.getElementById('rentalsCount');
+        
+        if (countEl) countEl.textContent = rentals.length;
+
+        if (rentals.length === 0) {
+            const colspan = isClient() ? '6' : '7';
+            tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty-state">Нет данных</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = rentals.map(r => {
+            const actions = isManager() ? `
+                <td>
+                    <button class="btn-small" onclick="updateRentalStatus(${r.id})">🔄</button>
+                </td>
+            ` : '<td></td>';
+            
+            const clientCell = !isClient() ? `<td>${r.username || '-'}</td>` : '';
+            
+            return `
+                <tr>
+                    <td>${r.vehicleModel || '-'}</td>
+                    ${clientCell}
+                    <td>${getStatusBadge(r.status)}</td>
+                    <td>${formatDate(r.startDate)}</td>
+                    <td>${formatDate(r.endDate)}</td>
+                    <td>${formatMoney(r.totalPrice)}</td>
+                    ${actions}
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderPayments(payments) {
+        const tbody = document.querySelector('#payments tbody');
+        const countEl = document.getElementById('paymentsCount');
+        
+        if (countEl) countEl.textContent = payments.length;
+
+        if (payments.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Нет данных</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = payments.map(p => {
+            const actions = isManager() ? `
+                <td>
+                    <button class="btn-small" onclick="updatePaymentStatus(${p.id})">🔄</button>
+                </td>
+            ` : '<td></td>';
+            
+            return `
+                <tr>
+                    <td>${p.rentalId || '-'}</td>
+                    <td>${formatMoney(p.amount)}</td>
+                    <td>${p.method || '-'}</td>
+                    <td>${getStatusBadge(p.status)}</td>
+                    <td>${p.paidAt ? formatDate(p.paidAt) : '-'}</td>
+                    ${actions}
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderUsers(users) {
+        const tbody = document.querySelector('#users tbody');
+        if (!tbody) return;
+
+        if (users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Нет данных</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = users.map(u => `
+            <tr>
+                <td>${u.username}</td>
+                <td>${u.email}</td>
+                <td>${u.firstName} ${u.lastName}</td>
+                <td>${u.role}</td>
+                <td>${u.active ? '✅' : '❌'}</td>
+                <td>
+                    <button class="btn-small" onclick="toggleUserActive(${u.id}, ${!u.active})">
+                        ${u.active ? '🔒 Заблокировать' : '🔓 Разблокировать'}
+                    </button>
+                    <button class="btn-small" onclick="changeUserRole(${u.id})">👤 Роль</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function showVehicleModal(vehicle = null) {
+        const modal = document.getElementById('vehicleModal');
+        const form = document.getElementById('vehicleForm');
+        const title = document.getElementById('vehicleModalTitle');
+        
+        if (vehicle) {
+            title.textContent = 'Редактировать автомобиль';
+            document.getElementById('vehicleId').value = vehicle.id;
+            document.getElementById('vehicleLicensePlate').value = vehicle.licensePlate || '';
+            document.getElementById('vehicleManufacturer').value = vehicle.manufacturer || '';
+            document.getElementById('vehicleModel').value = vehicle.model || '';
+            document.getElementById('vehicleYear').value = vehicle.year || '';
+            document.getElementById('vehiclePrice').value = vehicle.dailyPrice || '';
+            document.getElementById('vehicleStatus').value = vehicle.status || 'AVAILABLE';
+            document.getElementById('vehicleColor').value = vehicle.color || '';
+            document.getElementById('vehicleMileage').value = vehicle.mileage || '';
+        } else {
+            title.textContent = 'Добавить автомобиль';
+            form.reset();
+            document.getElementById('vehicleId').value = '';
+        }
+        
+        modal.classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+    }
+
+    async function saveVehicle(e) {
+        e.preventDefault();
+        const id = document.getElementById('vehicleId').value;
+        const data = {
+            licensePlate: document.getElementById('vehicleLicensePlate').value,
+            manufacturer: document.getElementById('vehicleManufacturer').value,
+            model: document.getElementById('vehicleModel').value,
+            year: parseInt(document.getElementById('vehicleYear').value),
+            dailyPrice: parseFloat(document.getElementById('vehiclePrice').value),
+            status: document.getElementById('vehicleStatus').value,
+            color: document.getElementById('vehicleColor').value,
+            mileage: parseFloat(document.getElementById('vehicleMileage').value) || 0
+        };
+
+        try {
+            if (id) {
+                await api(`/api/vehicles/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(data)
+                });
+                showToast('Автомобиль обновлен', 'success');
+            } else {
+                await api('/api/vehicles', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                showToast('Автомобиль добавлен', 'success');
+            }
+            closeModal('vehicleModal');
+            loadData();
+        } catch (e) {
+            showToast('Ошибка: ' + e.message, 'error');
+        }
+    }
+
+    async function editVehicle(id) {
+        const vehicle = allVehicles.find(v => v.id === id);
+        if (vehicle) {
+            showVehicleModal(vehicle);
+        }
+    }
+
+    async function deleteVehicle(id) {
+        if (!confirm('Удалить этот автомобиль?')) return;
+        try {
+            await api(`/api/vehicles/${id}`, { method: 'DELETE' });
+            showToast('Автомобиль удален', 'success');
+            loadData();
+        } catch (e) {
+            showToast('Ошибка: ' + e.message, 'error');
+        }
+    }
+
+    async function updateRentalStatus(id) {
+        const rental = allRentals.find(r => r.id === id);
+        if (!rental) return;
+        
+        const newStatus = prompt('Новый статус (ACTIVE, COMPLETED, CANCELLED):', rental.status);
+        if (!newStatus) return;
+        
+        try {
+            await api(`/api/rentals/${id}/status`, {
+                method: 'PUT',
+                body: JSON.stringify({ status: newStatus })
+            });
+            showToast('Статус обновлен', 'success');
+            loadData();
+        } catch (e) {
+            showToast('Ошибка: ' + e.message, 'error');
+        }
+    }
+
+    async function updatePaymentStatus(id) {
+        const payment = allPayments.find(p => p.id === id);
+        if (!payment) return;
+        
+        const newStatus = prompt('Новый статус (PENDING, PAID, FAILED, REFUNDED):', payment.status);
+        if (!newStatus) return;
+        
+        try {
+            await api(`/api/payments/${id}/status?status=${newStatus}`, {
+                method: 'PUT'
+            });
+            showToast('Статус обновлен', 'success');
+            loadData();
+        } catch (e) {
+            showToast('Ошибка: ' + e.message, 'error');
+        }
+    }
+
+    async function toggleUserActive(id, active) {
+        try {
+            const endpoint = active ? `/api/users/${id}/unblock` : `/api/users/${id}/block`;
+            await api(endpoint, { method: 'POST' });
+            showToast(`Пользователь ${active ? 'разблокирован' : 'заблокирован'}`, 'success');
+            loadUsers();
+        } catch (e) {
+            showToast('Ошибка: ' + e.message, 'error');
+        }
+    }
+
+    async function changeUserRole(id) {
+        const role = prompt('Новая роль (ADMIN, MANAGER, CLIENT):');
+        if (!role) return;
+        
+        try {
+            await api(`/api/users/${id}/role/${role}`, { method: 'POST' });
+            showToast('Роль изменена', 'success');
+            loadUsers();
+        } catch (e) {
+            showToast('Ошибка: ' + e.message, 'error');
+        }
+    }
+
+    function showUserModal() {
+        alert('Функция добавления пользователя будет реализована');
+    }
+
+    function showRentalModal(vehicleId = null) {
+        const modal = document.getElementById('rentalModal');
+        const select = document.getElementById('rentalVehicleSelect');
+        const startDate = document.getElementById('rentalStartDate');
+        const endDate = document.getElementById('rentalEndDate');
+        
+        // Заполняем список доступных автомобилей
+        select.innerHTML = '<option value="">Выберите автомобиль</option>';
+        allVehicles.filter(v => v.status === 'AVAILABLE').forEach(v => {
+            const option = document.createElement('option');
+            option.value = v.id;
+            option.textContent = `${v.manufacturer} ${v.model} (${v.year}) - ${formatMoney(v.dailyPrice)}/день`;
+            if (vehicleId && v.id === vehicleId) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+        
+        // Устанавливаем минимальную дату (сегодня)
+        const today = new Date().toISOString().split('T')[0];
+        startDate.min = today;
+        endDate.min = today;
+        
+        // Если передан vehicleId, устанавливаем его
+        if (vehicleId) {
+            document.getElementById('rentalVehicleId').value = vehicleId;
+        } else {
+            document.getElementById('rentalVehicleId').value = '';
+        }
+        
+        // Очищаем даты
+        startDate.value = '';
+        endDate.value = '';
+        document.getElementById('rentalTotalPrice').textContent = '-';
+        
+        // Обработчики для расчета стоимости
+        select.onchange = calculateRentalPrice;
+        startDate.onchange = calculateRentalPrice;
+        endDate.onchange = calculateRentalPrice;
+        
+        modal.classList.remove('hidden');
+    }
+
+    function calculateRentalPrice() {
+        const vehicleId = document.getElementById('rentalVehicleSelect').value;
+        const startDate = document.getElementById('rentalStartDate').value;
+        const endDate = document.getElementById('rentalEndDate').value;
+        
+        if (!vehicleId || !startDate || !endDate) {
+            document.getElementById('rentalTotalPrice').textContent = '-';
+            return;
+        }
+        
+        const vehicle = allVehicles.find(v => v.id == vehicleId);
+        if (!vehicle) return;
+        
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        
+        if (days < 1) {
+            document.getElementById('rentalTotalPrice').textContent = 'Неверные даты';
+            return;
+        }
+        
+        const total = vehicle.dailyPrice * days;
+        document.getElementById('rentalTotalPrice').textContent = formatMoney(total) + ` (${days} ${days === 1 ? 'день' : days < 5 ? 'дня' : 'дней'})`;
+    }
+
+    function rentVehicle(vehicleId) {
+        showRentalModal(vehicleId);
+    }
+
+    async function saveRental(e) {
+        e.preventDefault();
+        const vehicleId = document.getElementById('rentalVehicleSelect').value;
+        const startDate = document.getElementById('rentalStartDate').value;
+        const endDate = document.getElementById('rentalEndDate').value;
+        
+        if (!vehicleId || !startDate || !endDate) {
+            showToast('Заполните все поля', 'error');
+            return;
+        }
+        
+        const data = {
+            vehicleId: parseInt(vehicleId),
+            startDate: startDate,
+            endDate: endDate
+        };
+        
+        try {
+            await api('/api/rentals', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            showToast('Аренда создана успешно', 'success');
+            closeModal('rentalModal');
+            loadData();
+        } catch (e) {
+            showToast('Ошибка: ' + e.message, 'error');
+        }
+    }
+
+    async function loadUserInfo() {
+        try {
+            currentUser = await api('/api/auth/me');
+            const userInfo = document.getElementById('userInfo');
+            if (userInfo && currentUser) {
+                userInfo.textContent = `${currentUser.firstName} ${currentUser.lastName} (${currentUser.role})`;
+            }
+            showAdminFeatures();
+        } catch (e) {
+            console.error('Failed to load user info:', e);
+        }
+    }
+
+    async function loadUsers() {
+        if (!isAdmin()) return;
+        try {
+            allUsers = await api('/api/users');
+            renderUsers(allUsers);
+        } catch (e) {
+            console.error('Failed to load users:', e);
+        }
+    }
+
+    async function loadData() {
+        try {
+            const [vehicles, rentals, payments] = await Promise.all([
+                api('/api/vehicles').catch(e => {
+                    console.error('Vehicles load error:', e);
+                    showToast('Ошибка загрузки автомобилей: ' + e.message, 'error');
+                    return [];
+                }),
+                api('/api/rentals').catch(e => {
+                    console.error('Rentals load error:', e);
+                    showToast('Ошибка загрузки аренд: ' + e.message, 'error');
+                    return [];
+                }),
+                api('/api/payments').catch(e => {
+                    console.error('Payments load error:', e);
+                    showToast('Ошибка загрузки платежей: ' + e.message, 'error');
+                    return [];
+                })
+            ]);
+
+            allVehicles = vehicles || [];
+            allRentals = rentals || [];
+            allPayments = payments || [];
+
+            renderVehicles(allVehicles);
+            renderRentals(allRentals);
+            renderPayments(allPayments);
+            
+            if (isAdmin()) {
+                loadUsers();
+            }
+        } catch (e) {
+            console.error('Load error:', e);
+            showToast('Ошибка загрузки данных: ' + (e.message || 'Неизвестная ошибка'), 'error');
+        }
+    }
+
+    document.getElementById('logoutBtn').onclick = async () => {
+        try {
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+        } catch (e) {
+            console.error('Logout error:', e);
+        }
+        window.location.href = '/login.html';
+    };
+
+    loadUserInfo();
+    loadData();
+</script>
+</body>
+</html>

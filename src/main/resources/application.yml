@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: car_rental_1
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/car_rental_1}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:1234}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: false
+    baseline-on-migrate: false
+    locations: classpath:db/migration
+  main:
+    allow-circular-references: true
+
+server:
+  port: 8080
+  error:
+    include-message: always
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:change-me-secret-key-please-1234567890}
+    access-token-expiration-minutes: 30
+    refresh-token-expiration-days: 15
+
+app:
+  admin:
+    username: admin
+    password: admin123
+    email: admin@example.com
+    first-name: Admin
+    last-name: User
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: INFO
+

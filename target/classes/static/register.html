@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация - Car Rental</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header>
+    <div class="header-content">
+        <h1>🚗 Car Rental</h1>
+        <nav>
+            <a href="/index.html">Главная</a>
+            <a href="/login.html">Войти</a>
+            <a href="/author.html">Об авторе</a>
+        </nav>
+    </div>
+</header>
+<main class="card">
+    <h2>📝 Регистрация</h2>
+    <form id="regForm">
+        <label>
+            Логин
+            <input name="username" placeholder="Введите логин" required autofocus>
+        </label>
+        <label>
+            Email
+            <input name="email" type="email" placeholder="example@mail.com" required>
+        </label>
+        <label>
+            Пароль
+            <div class="password-input-wrapper">
+                <input name="password" type="password" id="passwordInput" placeholder="Минимум 6 символов" required minlength="6">
+                <button type="button" class="toggle-password" onclick="togglePassword('passwordInput', this)" title="Показать/скрыть пароль">
+                    👁️
+                </button>
+            </div>
+        </label>
+        <label>
+            Имя
+            <input name="firstName" placeholder="Ваше имя" required>
+        </label>
+        <label>
+            Фамилия
+            <input name="lastName" placeholder="Ваша фамилия" required>
+        </label>
+        <button type="submit">Создать аккаунт</button>
+    </form>
+    <div id="regMsg" class="msg"></div>
+    <p style="text-align: center; margin-top: 1.5rem;">
+        Уже есть аккаунт? <a href="/login.html">Войти</a>
+    </p>
+</main>
+<script>
+    const form = document.getElementById('regForm');
+    const msg = document.getElementById('regMsg');
+    
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        msg.textContent = '';
+        msg.className = 'msg';
+        
+        const payload = {
+            username: form.username.value.trim(),
+            email: form.email.value.trim(),
+            password: form.password.value,
+            firstName: form.firstName.value.trim(),
+            lastName: form.lastName.value.trim()
+        };
+        
+        try {
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                msg.textContent = '✅ Аккаунт успешно создан! Перенаправление...';
+                msg.className = 'msg success';
+                setTimeout(() => {
+                    window.location.href = '/dashboard.html';
+                }, 1000);
+            } else {
+                msg.textContent = '❌ ' + (data.message || 'Ошибка регистрации. Проверьте данные.');
+                msg.className = 'msg error';
+            }
+        } catch (error) {
+            msg.textContent = '❌ Ошибка соединения с сервером';
+            msg.className = 'msg error';
+        }
+    });
+    
+    function togglePassword(inputId, button) {
+        const input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            button.textContent = '🙈';
+        } else {
+            input.type = 'password';
+            button.textContent = '👁️';
+        }
+    }
+</script>
+</body>
+</html>
+
